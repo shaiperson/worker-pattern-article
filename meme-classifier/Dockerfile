@@ -6,4 +6,4 @@ RUN pip install pillow
 
 COPY ./model ./model
 
-COPY ./* .
+COPY ./* ./
