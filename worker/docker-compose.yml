@@ -20,8 +20,8 @@ services:
     image: controller
     build: ../controller
     environment:
-      - SIDECAR_HOST=meme-classifier
-      - SIDECAR_PORT=5000
+      - RUNNER_HOST=meme-classifier
+      - RUNNER_PORT=5000
       - RABBITMQ_HOST=rabbitmq
       - QUEUE_NAME=tasks
       - LOG_LEVEL=INFO

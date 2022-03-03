@@ -6,8 +6,8 @@ import logging
 import requests
 
 LOG_LEVEL = os.environ.get('LOG_LEVEL', '')
-SIDECAR_HOST = os.environ.get('SIDECAR_HOST', 'localhost')
-SIDECAR_PORT = os.environ.get('SIDECAR_PORT', 5000)
+RUNNER_HOST = os.environ.get('RUNNER_HOST', 'localhost')
+RUNNER_PORT = os.environ.get('RUNNER_PORT', 5000)
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
 QUEUE_NAME = os.environ.get('QUEUE_NAME', 'tasks')
 
@@ -27,14 +27,14 @@ def run():
     channel.queue_declare(queue=QUEUE_NAME)
 
     def callback(channel, method, properties, body):
-        logger.info('Received message, calling sidecar')
+        logger.info('Received message, calling runner')
         headers = {'Content-Type': 'application/json'}
-        response = requests.request('POST', f'http://{SIDECAR_HOST}:{SIDECAR_PORT}', headers=headers, data=body)
+        response = requests.request('POST', f'http://{RUNNER_HOST}:{RUNNER_PORT}', headers=headers, data=body)
 
         if response.ok:
-            logger.info(f'Received result from sidecar: {response.json()}')
+            logger.info(f'Received result from runner: {response.json()}')
         else:
-            logger.error(f'Received error response from sidecar: {response.status_code} {response.json()}')
+            logger.error(f'Received error response from runner: {response.status_code} {response.json()}')
             # Handle error (retry/requeue/send to DLX)
 
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback, auto_ack=True)
