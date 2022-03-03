@@ -1,19 +1,22 @@
 version: '3'
 services:
   rabbitmq:
-    image: rabbitmq:3 
+    container_name: queue
+    image: rabbitmq:3
     ports:
       - 5672:5672
-#    logging:
-#      driver: none
+    logging:
+      driver: none
   meme-classifier:
+    container_name: meme-classifier
     image: meme-classifier
     environment:
       - PORT=5000
       - LOG_LEVEL=INFO
     command: python server.py
-  consumer:
-    image: consumer
+  controller:
+    container_name: controller
+    image: controller
     environment:
       - SIDECAR_HOST=meme-classifier
       - SIDECAR_PORT=5000

@@ -25,25 +25,35 @@ model.compile(
 )
 
 
-def pred_to_label(pred):
+def _pred_to_label(pred):
     i = np.argmax(pred)
     return labels[i]
 
 
-def run_on_url(url):
-    logger.debug('Fetching URL')
+def _get_image_bytes(url):
     response = requests.get(url)
-    img_bytes = io.BytesIO(response.content)
-
     if not response.ok:
         raise exceptions.RequestError('', response)
+    return io.BytesIO(response.content)
+
+
+def _get_image_tensor(image_bytes):
+    img = tf.image.resize(PIL.Image.open(image_bytes), (150, 150))
+    a = tf.keras.utils.img_to_array(img)
+    return tf.convert_to_tensor([a])
+
+
+def run_on_url(url):
+    logger.debug('Fetching image')
+    image_bytes = _get_image_bytes(url)
 
     logger.debug('Reading and preparing image')
-    img = tf.image.resize(PIL.Image.open(img_bytes), (150, 150))
-    a = tf.keras.utils.img_to_array(img)
-    t = tf.convert_to_tensor([a])
+    image_tensor = _get_image_tensor(image_bytes)
 
     logger.debug('Running on image')
-    pred = model.predict(t)
+    pred = model.predict(image_tensor)
 
-    return pred_to_label(pred)
+    res_i = pred.argmax()
+
+    # return (label, score)
+    return labels[res_i], pred.take(res_i)

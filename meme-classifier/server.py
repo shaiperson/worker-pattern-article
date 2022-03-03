@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
 import logging
+import traceback
 
 import exceptions
 
@@ -9,7 +10,7 @@ PORT = int(os.environ.get('PORT', 5000))
 LOG_LEVEL = os.environ.get('LOG_LEVEL', '')
 
 log_level = getattr(logging, LOG_LEVEL, 'DEBUG')
-logging.basicConfig(level=log_level, format='%(asctime)s :: %(levelname)s :: %(message)s')
+logging.basicConfig(level=log_level, format='%(levelname)s :: %(message)s')
 logger = logging.getLogger('Server')
 
 import classifier
@@ -40,9 +41,9 @@ class ClassifierServer(BaseHTTPRequestHandler):
 
         else:
             try:
-                logger.debug('Running algorithm on URL {}'.format(image_url))
-                result = classifier.run_on_url(image_url)
-                response_body = {'result': result}
+                logger.info('Running classifier on URL'.format(image_url))
+                label, score = classifier.run_on_url(image_url)
+                response_body = {'label': label, 'score': float(f'{score:.5f}')}
                 self._set_response(200, 'application/json')
 
             except exceptions.RequestError as e:
@@ -50,7 +51,8 @@ class ClassifierServer(BaseHTTPRequestHandler):
                 self._set_response(e.response.status_code, 'application/json')
 
             except Exception as e:
-                response_body = {'message': 'Internal error'}
+                error_str = traceback.format_exc()
+                response_body = {'message': '[x] Internal error', 'error': error_str}
                 self._set_response(500, 'application/json')
 
         self.wfile.write(json.dumps(response_body).encode('utf-8'))
@@ -60,7 +62,7 @@ if __name__ == '__main__':
     server_address = ('', PORT)
     httpd = HTTPServer(server_address, ClassifierServer)
     try:
-        logger.info('Listening on port {}'.format(PORT))
+        logger.info('[+] Listening on port {}'.format(PORT))
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
