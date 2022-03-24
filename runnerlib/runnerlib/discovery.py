@@ -1,24 +1,16 @@
 import logging
 import inspect
 import re
-import os
 import traceback
 
 import requests
 
-logger = logging.getLogger(f'Server')
+from .settings import host, runner_discovery_uri
 
-PORT = int(os.environ.get('PORT', 5000))
+logger = logging.getLogger(f'Discovery')
 
-sidecar_host = os.environ.get('CONTAINER_NAME', None)
-sidecar_port = int(os.environ.get('PORT', 0)) or None
-sidecar_discovery_host = os.environ.get('RUNNER_DISCOVERY_HOST', None)
-sidecar_discovery_port = int(os.environ.get('RUNNER_DISCOVERY_PORT', 0)) or None
 
-assert sidecar_discovery_host is not None
-assert sidecar_discovery_port is not None
-assert sidecar_port is not None
-assert sidecar_host is not None
+handlers_by_algorithm = {}
 
 
 class AlgorithmHandler:
@@ -37,46 +29,47 @@ class AlgorithmHandler:
         self.function.__call__(*args, **kwargs)
 
 
-def _register(algorithm_name):
-    host = f'{sidecar_discovery_host}:{sidecar_discovery_port}/runners'
-    body = {'algorithm_name': algorithm_name, 'host': f'http://{sidecar_host}:{sidecar_port}'}
+def _register_single(algorithm_name):
+    body = {'algorithm': algorithm_name, 'host': host}
 
-    response = requests.post( host, json=body)
+    response = requests.post(runner_discovery_uri, json=body)
 
     response.raise_for_status()
 
 
-def register():
-    logger.info(f'Looking for local algorithm handlers to register at port {PORT}')
+def register_all():
+    logger.info(f'Loading runner adapter...')
 
-    import integration_adapter
-    assert inspect.ismodule(integration_adapter)
+    import runner_adapter
+
+    logger.info(f'Loading runner adapter members...')
 
     algorithm_handlers = inspect.getmembers(
-        integration_adapter,
+        runner_adapter,
         predicate=lambda f: inspect.isfunction(f) and re.match(r'run_*', f.__name__)
     )
 
-    logger.info('Found handlers', ', '.join([h[0] for h in algorithm_handlers]))
+    print('potato')
 
+    logger.info(f'Found handlers: {", ".join([h[0] for h in algorithm_handlers])}')
+
+    global handlers_by_algorithm
     handlers_by_algorithm = {name.split('run_')[1]: AlgorithmHandler(function) for name, function in algorithm_handlers}
 
-    # Register algorithm with port solver
+    # Register algorithm with runner discovery
     unsuccessful = []
-    for name, _ in algorithm_handlers:
+    for name in handlers_by_algorithm:
         try:
             print('Registering algorithm', name)
-            _register(name)
+            _register_single(name)
         except:
             unsuccessful.append(name)
             traceback.print_exc()
 
     if unsuccessful:
         print('Unable to register algorithms', ', '.join([f'`{a}`' for a in unsuccessful]))
-        endpoints_registered = False
-    else:
-        endpoints_registered = True
 
-    # Expose handler getter
-    def get_handler(algorithm):
-        return handlers_by_algorithm.get(algorithm, None)
+
+# Expose handler getter
+def get_handler(algorithm):
+    return handlers_by_algorithm.get(algorithm, None)

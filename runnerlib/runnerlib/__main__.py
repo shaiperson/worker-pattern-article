@@ -1,5 +1,5 @@
-import discovery
-import server
+from .discovery import register_all
+from .server import run_server
 
-discovery.register()
-server.run()
+register_all()
+run_server()

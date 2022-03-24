@@ -5,27 +5,48 @@ services:
     image: rabbitmq:3
     ports:
       - 5672:5672
-    logging:
-      driver: none
-  meme-classifier:
-    container_name: meme-classifier
-    image: meme-classifier
-    build: ../meme-classifier
+#    logging:
+#      driver: none
+  
+  runner-discovery:
+    container_name: runner-discovery
+    image: runner-discovery
+    build: ../runner-discovery
     environment:
-      - PORT=5000
       - LOG_LEVEL=INFO
-    command: python server.py
+      - PORT=5099
+    command: python main.py
+
+  meme-classifier-runner:
+    container_name: meme-classifier-runner
+    image: meme-classifier
+    build:
+      context: ..
+      dockerfile: meme-classifier/Dockerfile
+    environment:
+      - LOG_LEVEL=INFO
+      # runnerlib env vars
+      - CONTAINER_NAME=meme-classifier-runner
+      - PORT=5000
+      - RUNNER_DISCOVERY_CONTAINER_NAME=runner-discovery
+      - RUNNER_DISCOVERY_PORT=5099
+    command: python -m runnerlib
+    depends_on:
+      - runner-discovery
+
   controller:
     container_name: controller
     image: controller
     build: ../controller
     environment:
-      - RUNNER_HOST=meme-classifier
-      - RUNNER_PORT=5000
+      - LOG_LEVEL=INFO
       - RABBITMQ_HOST=rabbitmq
       - QUEUE_NAME=tasks
-      - LOG_LEVEL=INFO
+      - RUNNER_DISCOVERY_CONTAINER_NAME=runner-discovery
+      - RUNNER_DISCOVERY_PORT=5099
     command: python main.py
     restart: on-failure
     depends_on:
       - rabbitmq
+      - runner-discovery
+      - meme-classifier-runner

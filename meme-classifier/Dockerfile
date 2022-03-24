@@ -1,9 +1,13 @@
 FROM tensorflow/tensorflow
 
-WORKDIR /opt/project
-
 RUN pip install pillow
 
-COPY ./model ./model
+COPY ./runnerlib /opt/lib/runnerlib
+WORKDIR /opt/lib/runnerlib
+RUN pip install .
 
-COPY ./* ./
+WORKDIR /opt/project
+
+COPY ./meme-classifier/model ./model
+
+COPY ./meme-classifier/* ./
