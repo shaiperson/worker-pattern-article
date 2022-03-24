@@ -26,7 +26,7 @@ class AlgorithmHandler:
         return self.argspec.args
 
     def call(self, *args, **kwargs):
-        self.function.__call__(*args, **kwargs)
+        return self.function.__call__(*args, **kwargs)
 
 
 def _register_single(algorithm_name):
@@ -49,8 +49,6 @@ def register_all():
         predicate=lambda f: inspect.isfunction(f) and re.match(r'run_*', f.__name__)
     )
 
-    print('potato')
-
     logger.info(f'Found handlers: {", ".join([h[0] for h in algorithm_handlers])}')
 
     global handlers_by_algorithm
@@ -60,14 +58,14 @@ def register_all():
     unsuccessful = []
     for name in handlers_by_algorithm:
         try:
-            print('Registering algorithm', name)
+            logger.info(f'Registering algorithm {name}')
             _register_single(name)
         except:
             unsuccessful.append(name)
             traceback.print_exc()
 
     if unsuccessful:
-        print('Unable to register algorithms', ', '.join([f'`{a}`' for a in unsuccessful]))
+        logger.error(f'Unable to register algorithms {", ".join([a for a in unsuccessful])}')
 
 
 # Expose handler getter

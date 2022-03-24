@@ -1,4 +1,7 @@
 import classifier
+import logging
+
+logger = logging.getLogger('Adapter')
 
 
 def run_meme_classifier(image_url):

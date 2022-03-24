@@ -2,6 +2,8 @@ import pika
 import sys
 import os
 import logging
+import json
+import traceback
 
 import requests
 
@@ -32,25 +34,33 @@ def run(runner_registry):
 
     channel.queue_declare(queue=QUEUE_NAME)
 
-    def callback(channel, method, properties, body):
-        assert 'algorithm' in body
-        assert 'payload' in body
+    def callback(channel, method, properties, body_raw):
+        try:
+            body = json.loads(body_raw)
+            logger.info(f'Received message {body}')
 
-        algorithm = body['algorithm']
-        payload = body['payload']
-        assert algorithm in runner_registry
+            assert 'algorithm' in body
+            assert 'payload' in body
 
-        runner_uri = runner_registry[algorithm]
+            algorithm = body['algorithm']
+            payload = body['payload']
 
-        logger.info(f'Received message for algorithm {algorithm}, calling runner on {runner_uri}')
+            assert algorithm in runner_registry
 
-        headers = {'Content-Type': 'application/json'}
-        response = requests.request('POST', runner_uri, headers=headers, data=payload)
+            runner_uri = f'{runner_registry[algorithm]}/{algorithm}'
 
-        if response.ok:
-            logger.info(f'Received result from runner: {response.json()}')
-        else:
-            logger.error(f'[x] Received error response from runner: {response.status_code} {response.json()}')
+            logger.info(f'Calling runner on {runner_uri}')
+
+            headers = {'Content-Type': 'application/json'}
+            response = requests.request('POST', runner_uri, headers=headers, data=json.dumps(payload))
+
+            if response.ok:
+                logger.info(f'Received result from runner: {response.json()}')
+            else:
+                logger.error(f'[x] Received error response from runner: {response.status_code} {response.json()}')
+                # Handle error (retry/requeue/send to DLX)
+        except:
+            traceback.print_exc()
             # Handle error (retry/requeue/send to DLX)
 
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback, auto_ack=True)
