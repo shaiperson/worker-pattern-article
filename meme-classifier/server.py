@@ -16,15 +16,20 @@ class ClassificationRequest(BaseModel):
     image_url: str
 
 
+class ClassificationResponse(BaseModel):
+    label: str
+    score: float
+
+
 app = FastAPI()
 
 
-@app.post("/")
+@app.post("/", status_code=200)
 async def create_item(request: ClassificationRequest):
     try:
         logger.info('Running classifier on URL'.format(request.image_url))
         label, score = classifier.run_on_url(request.image_url)
-        return dict(label=label, score=score)
+        return ClassificationResponse(label=label, score=score)
 
     except exceptions.RequestError as e:
         raise HTTPException(status_code=400, detail=f'Error fetching request image, received {e.response.status_code}')
