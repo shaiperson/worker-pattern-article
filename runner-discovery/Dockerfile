@@ -1,6 +1,6 @@
 FROM python:3.7
 
-SHELL ["/bin/bash", "-c"]
+#SHELL ["/bin/bash", "-c"]
 
 WORKDIR /opt/project
 
