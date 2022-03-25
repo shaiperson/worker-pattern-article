@@ -16,5 +16,5 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost')
 channel = connection.channel()
 channel.queue_declare(queue='tasks')
 
-channel.basic_publish(exchange='', routing_key='tasks', body=json.dumps({"url": url_arg}))
+channel.basic_publish(exchange='', routing_key='tasks', body=json.dumps({"image_url": url_arg}))
 
