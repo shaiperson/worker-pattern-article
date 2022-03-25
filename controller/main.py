@@ -2,6 +2,7 @@ import pika
 import sys
 import os
 import logging
+import traceback
 
 import requests
 
@@ -27,15 +28,19 @@ def run():
     channel.queue_declare(queue=QUEUE_NAME)
 
     def callback(channel, method, properties, body):
-        logger.info('Received message, calling runner')
-        headers = {'Content-Type': 'application/json'}
-        response = requests.request('POST', f'http://{RUNNER_HOST}:{RUNNER_PORT}', headers=headers, data=body)
+        try:
+            logger.info('Received message, calling runner')
+            headers = {'Content-Type': 'application/json'}
+            response = requests.request('POST', f'http://{RUNNER_HOST}:{RUNNER_PORT}', headers=headers, data=body)
 
-        if response.ok:
-            logger.info(f'Received result from runner: {response.json()}')
-        else:
-            logger.error(f'Received error response from runner: {response.status_code} {response.json()}')
-            # Handle error (retry/requeue/send to DLX)
+            if response.ok:
+                logger.info(f'Received result from runner: {response.json()}')
+            else:
+                logger.error(f'Received error response from runner: {response.status_code} {response.json()}')
+                # Handle error (retry/requeue/send to DLX)
+        except Exception:
+            error_str = traceback.format_exc()
+            logger.error(f'Failed to process message: {error_str}')
 
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback, auto_ack=True)
 
