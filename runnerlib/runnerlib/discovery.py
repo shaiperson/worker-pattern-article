@@ -5,7 +5,7 @@ import traceback
 
 import requests
 
-from .settings import host, runner_discovery_uri
+from .settings import settings
 
 logger = logging.getLogger(f'Discovery')
 
@@ -18,9 +18,9 @@ class AlgorithmHandler:
         self.function = function
         self.argspec = inspect.getfullargspec(function)
 
-    def validate_body(self, body):
-        # Body keys should correspond to handler args
-        return sorted(body.keys()) == sorted(self.get_expected_args())
+    def validate_payload(self, payload):
+        # Payload keys should correspond to handler args
+        return sorted(payload.keys()) == sorted(self.get_expected_args())
 
     def get_expected_args(self):
         return self.argspec.args
@@ -30,9 +30,9 @@ class AlgorithmHandler:
 
 
 def _register_single(algorithm_name):
-    body = {'algorithm': algorithm_name, 'host': host}
+    body = {'algorithm': algorithm_name, 'host': settings.host}
 
-    response = requests.post(runner_discovery_uri, json=body)
+    response = requests.post(settings.runner_discovery_uri, json=body)
 
     response.raise_for_status()
 

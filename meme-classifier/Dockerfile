@@ -1,6 +1,10 @@
 FROM tensorflow/tensorflow
 
+#RUN /usr/bin/python3 -m pip install --upgrade pip
+
 RUN pip install pillow
+COPY ./meme-classifier/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY ./runnerlib /opt/lib/runnerlib
 WORKDIR /opt/lib/runnerlib

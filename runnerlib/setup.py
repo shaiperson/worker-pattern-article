@@ -15,6 +15,11 @@ setuptools.setup(
     packages=setuptools.find_packages(include=['runnerlib']),
     install_requires=[
         'requests',
+        'numpy==1.21.5',
+        # 'tensorflow==2.7.0',
+        'fastapi>=0.68.0,<0.69.0',
+        'pydantic>=1.8.0,<2.0.0',
+        'uvicorn>=0.15.0,<0.16.0',
     ],
     python_requires=">=3.7",
 )
