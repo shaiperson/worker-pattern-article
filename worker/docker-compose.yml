@@ -25,7 +25,7 @@ services:
       context: ..
       dockerfile: meme-classifier/Dockerfile
     environment:
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=INFO
       # runnerlib env vars
       - CONTAINER_NAME=meme-classifier-runner
       - PORT=5000

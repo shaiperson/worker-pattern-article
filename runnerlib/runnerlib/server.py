@@ -3,44 +3,33 @@ import traceback
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, create_model
 
-import classifier
 from .settings import settings
-import exceptions
+from .models import SupportedAlgorithm, request_models_by_algorithm
 from .discovery import get_handler
+import exceptions
 
 logger = logging.getLogger('Server')
 
-
-class ClassificationRequest(BaseModel):
-    algorithm: str
-    payload: dict
-
-
-class ClassificationResponse(BaseModel):
-    result: dict
-
-
 app = FastAPI()
 
-# Validar algoritmo válido
-# Validar args con handler.get_expected_args()
 
+@app.post("/run/{algorithm}")
+async def run_algorithm(algorithm: SupportedAlgorithm, payload: dict):
+    logger.info(f'Received request to run algorithm {algorithm} on payload {payload}')
 
-@app.post("/", response_model=ClassificationResponse, status_code=200)
-async def run_algorithm(request: ClassificationRequest):
+    algorithm_name = algorithm.value
 
-    handler = get_handler(request.algorithm)
+    # Validate payload using dynamically generated algorithm-specific model
+    request_models_by_algorithm[algorithm_name].validate(payload)
 
-    if not handler.validate_payload(request.payload):
-        raise HTTPException(status_code=400, detail=f'Invalid payload. Expected fields: {handler.get_expected_args()}')
+    handler = get_handler(algorithm_name)
 
-    logger.info(f'Found handler {handler}, running on payload {request.payload}')
+    logger.debug(f'Found handler {handler}')
 
     try:
-        result = handler.call(**request.payload)
-        return ClassificationResponse(result=result)
+        result = handler(**payload)
+        return dict(result=result)
 
     except exceptions.RequestError as e:
         raise HTTPException(status_code=400, detail=f'Error fetching request image, received {e.response.status_code}')
@@ -51,4 +40,6 @@ async def run_algorithm(request: ClassificationRequest):
 
 
 def run_server():
+    logger.debug(f'request_models_by_algorithm: {request_models_by_algorithm}')
+    logger.debug(f'Supported algorithms: {list(SupportedAlgorithm)}')
     uvicorn.run(app, host="0.0.0.0", port=settings.port)

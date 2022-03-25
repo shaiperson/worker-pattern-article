@@ -47,12 +47,12 @@ def run(runner_registry):
 
             assert algorithm in runner_registry
 
-            runner_uri = f'{runner_registry[algorithm]}'
+            runner_uri = f'{runner_registry[algorithm]}/run/{algorithm}'
 
             logger.info(f'Calling runner on {runner_uri}')
 
             headers = {'Content-Type': 'application/json'}
-            response = requests.request('POST', runner_uri, headers=headers, data=json.dumps(dict(algorithm=algorithm, payload=payload)))
+            response = requests.request('POST', runner_uri, headers=headers, data=json.dumps(payload))
 
             if response.ok:
                 logger.info(f'Received result from runner: {response.json()}')
