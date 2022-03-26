@@ -24,7 +24,7 @@ class ClassificationResponse(BaseModel):
 app = FastAPI()
 
 
-@app.post("/", status_code=200)
+@app.post("/", status_code=200, response_model=ClassificationResponse)
 async def create_item(request: ClassificationRequest):
     try:
         logger.info('Running classifier on URL'.format(request.image_url))
