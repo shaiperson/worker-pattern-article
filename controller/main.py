@@ -57,7 +57,7 @@ def run(runner_registry):
             if response.ok:
                 logger.info(f'Received result from runner: {response.json()}')
             else:
-                logger.error(f'[x] Received error response from runner: {response.status_code} {response.json()}')
+                logger.error(f'[x] Received error response from runner: {response.status_code} {response.content.decode()}')
                 # Handle error (retry/requeue/send to DLX)
         except:
             traceback.print_exc()

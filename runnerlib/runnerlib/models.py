@@ -1,6 +1,6 @@
 import inspect
 
-from pydantic import create_model, BaseModel
+from pydantic import create_model, Extra
 from enum import Enum
 
 from .discovery import handlers_by_algorithm
@@ -8,12 +8,16 @@ from .discovery import handlers_by_algorithm
 request_models_by_algorithm = {}
 _supported_algorithm_names = []
 
-# Dynamically create
 
+class Config:
+    extra = Extra.forbid
+
+
+# Dynamically create
 for name, handler in handlers_by_algorithm.items():
     argspec = inspect.getfullargspec(handler)
     typed_argspec = {field: (typehint, ...) for field, typehint in argspec.annotations.items()}
-    request_model = create_model(f'AlgorithmRequestModel_{name}', **typed_argspec)
+    request_model = create_model(f'AlgorithmRequestModel_{name}', **typed_argspec, __config__=Config)
     request_models_by_algorithm[name] = request_model
     _supported_algorithm_names.append(name)
 

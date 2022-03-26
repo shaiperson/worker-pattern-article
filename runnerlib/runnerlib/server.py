@@ -3,6 +3,7 @@ import traceback
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from pydantic.error_wrappers import ValidationError
 
 from .settings import settings
 from .models import SupportedAlgorithm, request_models_by_algorithm
@@ -21,11 +22,17 @@ async def run_algorithm(algorithm: SupportedAlgorithm, payload: dict):
     algorithm_name = algorithm.value
 
     # Validate payload using dynamically generated algorithm-specific model
-    request_models_by_algorithm[algorithm_name].validate(payload)
+    try:
+        request_model = request_models_by_algorithm[algorithm_name]
+        request_model.validate(payload)
+        logger.debug(f'Validated payload {payload} against model {request_model.__name__}')
+    except ValidationError as e:
+        logger.debug(f'Validation failed for payload {payload} against model {request_model.__name__}')
+        raise HTTPException(status_code=400, detail=str(e))
 
     handler = get_handler(algorithm_name)
 
-    logger.debug(f'Found handler {handler}')
+    logger.debug(f'Found handler {handler} for algorithm of name {algorithm_name}')
 
     try:
         result = handler(**payload)
