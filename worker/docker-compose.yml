@@ -32,6 +32,8 @@ services:
       - RUNNER_DISCOVERY_CONTAINER_NAME=runner-discovery
       - RUNNER_DISCOVERY_PORT=5099
       - PYTHONUNBUFFERED=1
+    ports:
+      - 5000:5000
     command: python -m runnerlib
     depends_on:
       - runner-discovery
