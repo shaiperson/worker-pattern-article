@@ -4,6 +4,7 @@ import os
 import logging
 import json
 import traceback
+from urllib.parse import urljoin
 
 import requests
 
@@ -24,7 +25,7 @@ logging.getLogger('pika').setLevel(logging.CRITICAL)
 
 
 def get_runner_registry():
-    return requests.request('GET', runner_discovery_uri).json()
+    return requests.request('GET', urljoin(runner_discovery_uri, 'algorithms')).json()
 
 
 def run(runner_registry):

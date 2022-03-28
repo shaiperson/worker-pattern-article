@@ -20,13 +20,13 @@ app = FastAPI()
 registry = {}
 
 
-@app.post('/')
+@app.post('/algorithms')
 async def register_algorithm(request: AlgorithmRegistrationRequest):
     logger.info(f'Registering algorithm {request.algorithm} as hosted on {request.host}')
     registry[request.algorithm] = request.host
 
 
-@app.get('/')
+@app.get('/algorithms')
 async def get_registry():
     return registry
 

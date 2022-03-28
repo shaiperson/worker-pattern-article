@@ -2,6 +2,7 @@ import logging
 import inspect
 import re
 import traceback
+from urllib.parse import urljoin
 
 import requests
 
@@ -15,9 +16,7 @@ handlers_by_algorithm = None
 
 def _register_single(algorithm_name):
     body = {'algorithm': algorithm_name, 'host': settings.host}
-
-    response = requests.post(settings.runner_discovery_uri, json=body)
-
+    response = requests.post(urljoin(settings.runner_discovery_uri, 'algorithms'), json=body)
     response.raise_for_status()
 
 
