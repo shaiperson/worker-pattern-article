@@ -1,15 +1,13 @@
-import requests
 import PIL
-import io
 import logging
 
 import numpy as np
 import tensorflow as tf
 
 from labels import labels
-import exceptions
+import imgutils
 
-logger = logging.getLogger('Classifier')
+logger = logging.getLogger('Meme Classifier')
 
 # Load and compile model
 logger.info('Loading model')
@@ -30,13 +28,6 @@ def _pred_to_label(pred):
     return labels[i]
 
 
-def _get_image_bytes(url):
-    response = requests.get(url)
-    if not response.ok:
-        raise exceptions.RequestError('', response)
-    return io.BytesIO(response.content)
-
-
 def _get_image_tensor(image_bytes):
     img = tf.image.resize(PIL.Image.open(image_bytes), (150, 150))
     a = tf.keras.utils.img_to_array(img)
@@ -45,7 +36,7 @@ def _get_image_tensor(image_bytes):
 
 def run_on_url(url):
     logger.debug('Fetching image')
-    image_bytes = _get_image_bytes(url)
+    image_bytes = imgutils.image_url_to_bytes(url)
 
     logger.debug('Reading and preparing image')
     image_tensor = _get_image_tensor(image_bytes)

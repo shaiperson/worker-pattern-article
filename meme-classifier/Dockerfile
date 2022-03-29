@@ -1,6 +1,8 @@
 FROM tensorflow/tensorflow
 
-#RUN /usr/bin/python3 -m pip install --upgrade pip
+# Install Tesseract engine
+RUN apt-get update
+RUN apt-get -y install tesseract-ocr
 
 RUN pip install pillow
 COPY ./meme-classifier/requirements.txt ./requirements.txt

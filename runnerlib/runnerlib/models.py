@@ -24,5 +24,5 @@ for name, handler in handlers_by_algorithm.items():
 SupportedAlgorithm = Enum('SupportedAlgorithm', {name: name for name in _supported_algorithm_names})
 
 
-def get_schemas():
+def get_model_schemas():
     return {name: model.schema() for name, model in request_models_by_algorithm.items()}

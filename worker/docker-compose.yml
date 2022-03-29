@@ -38,6 +38,26 @@ services:
     depends_on:
       - runner-discovery
 
+  nlp-runner:
+    container_name: nlp-runner
+    image: nlp
+    build:
+      context: ..
+      dockerfile: nlp/Dockerfile
+    environment:
+      - LOG_LEVEL=INFO
+      # runnerlib env vars
+      - CONTAINER_NAME=nlp-runner
+      - PORT=5001
+      - RUNNER_DISCOVERY_CONTAINER_NAME=runner-discovery
+      - RUNNER_DISCOVERY_PORT=5099
+      - PYTHONUNBUFFERED=1
+    ports:
+      - 5001:5001
+    command: python -m runnerlib
+    depends_on:
+      - runner-discovery
+
   controller:
     container_name: controller
     image: controller
@@ -54,4 +74,5 @@ services:
     depends_on:
       - rabbitmq
       - runner-discovery
+      - nlp-runner
       - meme-classifier-runner

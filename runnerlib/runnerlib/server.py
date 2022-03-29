@@ -6,9 +6,9 @@ from fastapi import FastAPI, HTTPException
 from pydantic.error_wrappers import ValidationError
 
 from .settings import settings
-from .models import SupportedAlgorithm, request_models_by_algorithm
+from .models import SupportedAlgorithm, request_models_by_algorithm, get_model_schemas
 from .discovery import get_handler
-import exceptions
+from .exceptions import RequestError
 
 logger = logging.getLogger('Server')
 
@@ -38,12 +38,17 @@ async def run_algorithm(algorithm: SupportedAlgorithm, payload: dict):
         result = handler(**payload)
         return dict(result=result)
 
-    except exceptions.RequestError as e:
+    except RequestError as e:
         raise HTTPException(status_code=400, detail=f'Error fetching request image, received {e.response.status_code}')
 
     except Exception as e:
         error_str = traceback.format_exc()
         raise HTTPException(status_code=500, detail=error_str)
+
+
+@app.get("/schemas")
+async def get_schemas():
+    return get_model_schemas()
 
 
 def run_server():
