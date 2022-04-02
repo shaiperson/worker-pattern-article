@@ -6,6 +6,4 @@ COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 RUN pip install pillow
 
-COPY ./model ./model
-
-COPY ./* ./
+COPY ./ ./
