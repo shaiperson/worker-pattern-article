@@ -14,6 +14,4 @@ RUN pip install .
 
 WORKDIR /opt/project
 
-COPY ./meme-classifier/model ./model
-
-COPY ./meme-classifier/* ./
+COPY ./meme-classifier/ ./
